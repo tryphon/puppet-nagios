@@ -1,0 +1,6 @@
+contacts nagios
+contact.nagios.command /usr/sbin/send_nsca -H localhost -c /etc/send_nsca.cfg
+
+# Customize some of the service names
+# defined into services/munin-plugins.cfg
+df.notify_alias Disk usage
