@@ -11,10 +11,6 @@ class nagios::nsca::server {
     ensure => directory
   }
 
-  file { "/var/run/nagios.test":
-    ensure => directory
-  }
-
   file {
     "/var/lib/nagios3/rw":
     owner => nagios,
