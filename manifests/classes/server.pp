@@ -86,4 +86,10 @@ class nagios::server {
     ensure => directory
   }
 
+  package { nagios-nrpe-plugin: }
+
+  file { "/etc/nagios3/services/apt-service.cfg":
+    source => "puppet:///nagios/services/apt-service.cfg"
+  }
+
 }

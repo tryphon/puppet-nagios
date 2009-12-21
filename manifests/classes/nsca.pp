@@ -26,8 +26,8 @@ class nagios::nsca::server {
   file { "/etc/nagios3/services/munin-plugins.cfg":
     source => "puppet:///nagios/services/munin-plugins.cfg";
 
-    "/etc/nagios3/services/passive_service.cfg":
-    source => "puppet:///nagios/services/passive_service.cfg"
+    "/etc/nagios3/services/passive-service.cfg":
+    source => "puppet:///nagios/services/passive-service.cfg"
   }
 
   # Customize munin configuration to send warning via nsca
