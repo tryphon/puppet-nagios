@@ -4,7 +4,7 @@ class nagios::nrpe {
 
   service { nagios-nrpe-server: 
     ensure => running,
-    require => Package[nagios-nrpe-server],
+    require => [File["/etc/nagios/nrpe.d"],Package[nagios-nrpe-server]],
     pattern => "/usr/sbin/nrpe"
   }
 
