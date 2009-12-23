@@ -51,4 +51,9 @@ class nagios::nsca::server {
     notify => Service[nsca]
   }
 
+  file { "/usr/bin/munin-cron":
+    source => "puppet:///nagios/munin-cron",
+    mode => 755
+  }
+
 }
