@@ -24,6 +24,12 @@ class nagios::server {
     notify => Service[nagios]
   }
 
+  file { "/etc/cron.daily/nagios3":
+    source => "puppet:///nagios/nagios3.cron",
+    mode => 755,
+    require => Package[nagios]
+  }
+
   define config_directory() {
     file { "/etc/nagios3/$name":
       recurse => true,
