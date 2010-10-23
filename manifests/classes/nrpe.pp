@@ -26,4 +26,11 @@ class nagios::nrpe {
 
   package { nagios-plugins: }
 
+  include nagios::nrpe::tiger
+}
+
+class nagios::nrpe::tiger {
+  if $tiger_enabled {
+    tiger::ignore { nagios_nrpe: }
+  }  
 }

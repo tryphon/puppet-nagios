@@ -56,4 +56,11 @@ class nagios::nsca::server {
     mode => 755
   }
 
+  include nagios::nsca::tiger
+}
+
+class nagios::nsca::tiger {
+  if $tiger_enabled {
+    tiger::ignore { nagios_nsca: }
+  }  
 }
