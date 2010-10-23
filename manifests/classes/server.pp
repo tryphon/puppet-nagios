@@ -6,7 +6,7 @@ class nagios::server {
     alias => nagios
   }
 
-  service{nagios3:
+  service { nagios3:
     ensure => running,
     alias => nagios,
     require => Package[nagios]
@@ -55,36 +55,13 @@ class nagios::server {
     notify => Service[nagios]
   }
 
-  puppet::augeas::lens { nagiosconfig:
-    source => "puppet:///nagios/nagiosconfig.aug"
-  }
-
-  augeas { "/etc/nagios3/cgi.cfg":
-    context => "/files/etc/nagios3/cgi.cfg/",
-    changes => [
-        "set authorized_for_system_information *",
-        "set authorized_for_system_information *",
-        "set authorized_for_configuration_information *",
-        "set authorized_for_system_commands *",
-        "set authorized_for_all_services *",
-        "set authorized_for_all_hosts *",
-        "set authorized_for_all_service_commands *",
-        "set authorized_for_all_host_commands *",
-    ],
-    require => Puppet::Augeas::Lens[nagiosconfig],
-    load_path => "/usr/local/share/augeas/lenses/",
+  file { "/etc/nagios3/cgi.cfg":
+    source => "puppet:///nagios/cgi.cfg",
     notify => Service[nagios]
   }
-
-  augeas { "/etc/nagios3/nagios.cfg":
-    context => "/files/etc/nagios3/nagios.cfg/",
-    changes => [
-        # TODO insert correctly nagios cfg_directories
-        "set cfg_dir[3] /etc/nagios3/services",
-        "set cfg_dir[4] /etc/nagios3/hosts"
-    ],
-    require => [Puppet::Augeas::Lens[nagiosconfig], File["/etc/nagios3/services"], File["/etc/nagios3/hosts"]],
-    load_path => "/usr/local/share/augeas/lenses/",
+  file { "/etc/nagios3/nagios.cfg":
+    source => "puppet:///nagios/nagios.cfg"
+    require => [File["/etc/nagios3/services"], File["/etc/nagios3/hosts"]],
     notify => Service[nagios]
   }
 
