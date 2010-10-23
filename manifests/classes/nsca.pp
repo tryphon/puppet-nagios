@@ -36,16 +36,6 @@ class nagios::nsca::server {
     source => "puppet:///nagios/munin.conf.contactnagios"
   }
 
-  augeas { "external commands in /etc/nagios3/nagios.cfg":
-    context => "/files/etc/nagios3/nagios.cfg/",
-    changes => [
-        "set check_external_commands 1"
-    ],
-    require => [Puppet::Augeas::Lens[nagiosconfig], File["/var/lib/nagios3/rw"]],
-    load_path => "/usr/local/share/augeas/lenses/",
-    notify => Service[nagios]
-  }
-
   file { "/etc/nsca.cfg":
     source => "puppet:///nagios/nsca.cfg",
     notify => Service[nsca]
