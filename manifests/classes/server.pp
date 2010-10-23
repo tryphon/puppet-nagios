@@ -60,7 +60,7 @@ class nagios::server {
     notify => Service[nagios]
   }
   file { "/etc/nagios3/nagios.cfg":
-    source => "puppet:///nagios/nagios.cfg"
+    source => "puppet:///nagios/nagios.cfg",
     require => [File["/etc/nagios3/services"], File["/etc/nagios3/hosts"]],
     notify => Service[nagios]
   }
