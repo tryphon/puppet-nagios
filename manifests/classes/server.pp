@@ -1,6 +1,7 @@
 class nagios::server {
   include apache2
   include apache2::auth::pam
+  include apache2::php5
 
   package { nagios3: 
     alias => nagios
