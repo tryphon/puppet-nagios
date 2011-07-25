@@ -15,7 +15,7 @@ class nagios::server {
 
   file { "/etc/nagios3/apache2.conf":
     source => "puppet:///nagios/apache2.conf",
-    require => Package[nagios],
+    require => [Package[nagios], Package[libapache2-mod-fcgid], Package[libapache2-mod-auth-pam]],
     notify => Service[apache2]
   }
 
