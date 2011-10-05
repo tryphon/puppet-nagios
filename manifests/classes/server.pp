@@ -34,6 +34,7 @@ class nagios::server {
   define config_directory() {
     file { "/etc/nagios3/$name":
       recurse => true,
+      purge => true,
       source => [ "puppet:///files/nagios/$name", "puppet:///nagios/empty" ],
       require => Package[nagios],
       notify => Service[nagios]
