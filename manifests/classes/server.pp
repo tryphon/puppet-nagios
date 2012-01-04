@@ -76,5 +76,8 @@ class nagios::server {
   file { "/etc/nagios3/services/apt-service.cfg":
     source => "puppet:///nagios/services/apt-service.cfg"
   }
+  file { "/etc/nagios3/services/mail-satellite-service.cfg":
+    source => "puppet:///nagios/services/mail-satellite-service.cfg"
+  }
 
 }
