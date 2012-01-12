@@ -74,10 +74,12 @@ class nagios::server {
   package { nagios-nrpe-plugin: }
 
   file { "/etc/nagios3/services/apt-service.cfg":
-    source => "puppet:///nagios/services/apt-service.cfg"
+    source => "puppet:///nagios/services/apt-service.cfg",
+    notify => Service[nagios]
   }
   file { "/etc/nagios3/services/mail-satellite-service.cfg":
-    source => "puppet:///nagios/services/mail-satellite-service.cfg"
+    source => "puppet:///nagios/services/mail-satellite-service.cfg",
+    notify => Service[nagios]
   }
 
 }
