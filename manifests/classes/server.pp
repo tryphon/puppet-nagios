@@ -24,6 +24,11 @@ class nagios::server {
     require => Package[nagios],
     notify => Service[nagios]
   }
+  file { "/etc/nagios3/conf.d/contacts.cfg":
+    source => ["puppet:///files/nagios/conf.d/contacts.cfg", "puppet:///nagios/conf.d/contacts.cfg"],
+    require => Package[nagios],
+    notify => Service[nagios]
+  }
 
   file { "/etc/cron.daily/nagios3":
     source => "puppet:///nagios/nagios3.cron",
