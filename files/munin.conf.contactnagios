@@ -1,5 +1,5 @@
 # Notify nagios via nsca client
 contacts nagios
-contact.nagios.command /usr/sbin/send_nsca -H localhost -c /etc/send_nsca.cfg
+contact.nagios.command /usr/sbin/send_nsca -H localhost -c /etc/send_nsca.cfg > /dev/null
 
 
