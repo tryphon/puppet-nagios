@@ -2,7 +2,7 @@ class nagios::nsca::server {
 
   package { nsca: }
 
-  service { nsca: 
+  service { nsca:
     ensure => running,
     require => [ Package[nsca], File["/var/run/nagios"] ]
   }
@@ -20,7 +20,7 @@ class nagios::nsca::server {
     "/var/lib/nagios3":
     owner => nagios,
     group => nagios,
-    mode => 751 
+    mode => 751
   }
 
   file { "/etc/nagios3/services/munin-plugins.cfg":
@@ -30,10 +30,9 @@ class nagios::nsca::server {
     source => "puppet:///nagios/services/passive-service.cfg"
   }
 
-  # Customize munin configuration to send warning via nsca
-  concatenated_file_source { "munin.conf.contactnagios":
-    dir    => "/etc/munin/conf.d",
-    source => "puppet:///nagios/munin.conf.contactnagios"
+  file { '/etc/munin/munin-conf.d/nagios.conf':
+    source => 'puppet:///nagios/munin.conf.contactnagios',
+    require => Package['munin']
   }
 
   file { "/etc/nsca.cfg":
@@ -52,5 +51,5 @@ class nagios::nsca::server {
 class nagios::nsca::tiger {
   if $tiger_enabled {
     tiger::ignore { nagios_nsca: }
-  }  
+  }
 }
