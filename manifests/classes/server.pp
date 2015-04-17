@@ -1,9 +1,8 @@
 class nagios::server {
   include apache2
-  include apache2::auth::pam
   include apache2::php5
 
-  package { nagios3: 
+  package { 'nagios3':
     alias => nagios
   }
 
@@ -13,10 +12,9 @@ class nagios::server {
     require => Package[nagios]
   }
 
-  file { "/etc/nagios3/apache2.conf":
+  apache2::confd_file { 'nagios3':
     source => "puppet:///nagios/apache2.conf",
-    require => [Package[nagios], Package[libapache2-mod-fcgid], Package[libapache2-mod-auth-pam]],
-    notify => Service[apache2]
+    require => Package['nagios', 'libapache2-mod-fcgid']
   }
 
   file { "/etc/nagios3/conf.d/defaults.cfg":
