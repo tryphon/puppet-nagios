@@ -1,2 +1,2 @@
 #!/bin/sh -e
-find /var/log/nagios3/archives -ctime +3 | xargs -r rm 
+find /var/log/nagios3/archives -ctime +90 | xargs -r rm
