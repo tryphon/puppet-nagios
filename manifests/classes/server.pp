@@ -74,7 +74,7 @@ class nagios::server {
     ensure => directory
   }
 
-  package { nagios-nrpe-plugin: }
+  package { ['nagios-nrpe-plugin', 'dnsutils']: }
 
   file { "/etc/nagios3/services/apt-service.cfg":
     source => "puppet:///nagios/services/apt-service.cfg",
