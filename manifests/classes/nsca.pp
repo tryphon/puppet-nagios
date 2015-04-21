@@ -34,6 +34,10 @@ class nagios::nsca::server {
     source => 'puppet:///nagios/munin.conf.contactnagios',
     require => Package['munin']
   }
+  file { '/usr/local/bin/munin-nagios-command':
+    source => 'puppet:///nagios/munin-nagios-command',
+    mode => 755
+  }
 
   file { "/etc/nsca.cfg":
     source => "puppet:///nagios/nsca.cfg",

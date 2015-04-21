@@ -1,0 +1,2 @@
+#!/bin/sh
+tr '\n' '\27' | /usr/sbin/send_nsca -H localhost -c /etc/send_nsca.cfg 2>&1 | logger -i -t send_nsca
