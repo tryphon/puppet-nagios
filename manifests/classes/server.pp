@@ -70,9 +70,7 @@ class nagios::server {
     notify => Service[nagios]
   }
 
-  file { ["/usr/local/lib/nagios", "/usr/local/lib/nagios/plugins"]:
-    ensure => directory
-  }
+  include nagios::plugins
 
   package { ['nagios-nrpe-plugin', 'dnsutils']: }
 
