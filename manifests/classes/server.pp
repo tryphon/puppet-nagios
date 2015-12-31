@@ -82,5 +82,11 @@ class nagios::server {
     source => "puppet:///nagios/services/mail-satellite-service.cfg",
     notify => Service[nagios]
   }
+  file { "/etc/nagios3/services/http.cfg":
+    source => "puppet:///nagios/services/http.cfg",
+    notify => Service[nagios]
+  }
 
+  nagios::plugin { 'check_http_redirect': }
+  include perl::lib::www
 }
