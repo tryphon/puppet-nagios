@@ -27,7 +27,7 @@ class nagios::nrpe {
   }
 
   file { "/etc/nagios/nrpe.d/defaults.cfg":
-    source => "puppet:///nagios/nrpe_defaults.cfg",
+    source => "puppet:///modules/nagios/nrpe_defaults.cfg",
     notify => Service['nagios-nrpe-server']
   }
 

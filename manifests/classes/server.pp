@@ -13,23 +13,23 @@ class nagios::server {
   }
 
   apache2::confd_file { 'nagios3':
-    source => "puppet:///nagios/apache2.conf",
+    source => "puppet:///modules/nagios/apache2.conf",
     require => Package['nagios', 'libapache2-mod-fcgid']
   }
 
   file { "/etc/nagios3/conf.d/defaults.cfg":
-    source => ["puppet:///files/nagios/conf.d/defaults.cfg", "puppet:///nagios/conf.d/defaults.cfg"],
+    source => ["puppet:///files/nagios/conf.d/defaults.cfg", "puppet:///modules/nagios/conf.d/defaults.cfg"],
     require => Package[nagios],
     notify => Service[nagios]
   }
   file { "/etc/nagios3/conf.d/contacts.cfg":
-    source => ["puppet:///files/nagios/conf.d/contacts.cfg", "puppet:///nagios/conf.d/contacts.cfg"],
+    source => ["puppet:///files/nagios/conf.d/contacts.cfg", "puppet:///modules/nagios/conf.d/contacts.cfg"],
     require => Package[nagios],
     notify => Service[nagios]
   }
 
   file { "/etc/cron.daily/nagios3":
-    source => "puppet:///nagios/nagios3.cron",
+    source => "puppet:///modules/nagios/nagios3.cron",
     mode => 755,
     require => Package[nagios]
   }
@@ -38,7 +38,7 @@ class nagios::server {
     file { "/etc/nagios3/$name":
       recurse => true,
       purge => true,
-      source => [ "puppet:///files/nagios/$name", "puppet:///nagios/empty" ],
+      source => [ "puppet:///files/nagios/$name", "puppet:///modules/nagios/empty" ],
       require => Package[nagios],
       notify => Service[nagios]
     }
@@ -61,11 +61,11 @@ class nagios::server {
   }
 
   file { "/etc/nagios3/cgi.cfg":
-    source => "puppet:///nagios/cgi.cfg",
+    source => "puppet:///modules/nagios/cgi.cfg",
     notify => Service[nagios]
   }
   file { "/etc/nagios3/nagios.cfg":
-    source => "puppet:///nagios/nagios.cfg",
+    source => "puppet:///modules/nagios/nagios.cfg",
     require => [File["/etc/nagios3/services"], File["/etc/nagios3/hosts"]],
     notify => Service[nagios]
   }
@@ -75,11 +75,11 @@ class nagios::server {
   package { ['nagios-nrpe-plugin', 'dnsutils']: }
 
   file { "/etc/nagios3/services/apt-service.cfg":
-    source => "puppet:///nagios/services/apt-service.cfg",
+    source => "puppet:///modules/nagios/services/apt-service.cfg",
     notify => Service[nagios]
   }
   file { "/etc/nagios3/services/mail-satellite-service.cfg":
-    source => "puppet:///nagios/services/mail-satellite-service.cfg",
+    source => "puppet:///modules/nagios/services/mail-satellite-service.cfg",
     notify => Service[nagios]
   }
   file { "/etc/nagios3/services/http.cfg":
