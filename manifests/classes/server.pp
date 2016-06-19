@@ -83,7 +83,7 @@ class nagios::server {
     notify => Service[nagios]
   }
   file { "/etc/nagios3/services/http.cfg":
-    source => "puppet:///nagios/services/http.cfg",
+    source => "puppet:///modules/nagios/services/http.cfg",
     notify => Service[nagios]
   }
 
