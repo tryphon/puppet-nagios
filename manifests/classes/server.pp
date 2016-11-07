@@ -86,6 +86,10 @@ class nagios::server {
     source => "puppet:///modules/nagios/services/http.cfg",
     notify => Service[nagios]
   }
+  file { "/etc/nagios3/services/puppet.cfg":
+    source => "puppet:///modules/nagios/services/puppet.cfg",
+    notify => Service[nagios]
+  }
 
   nagios::plugin { 'check_http_redirect': }
   include perl::lib::www
