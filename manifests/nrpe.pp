@@ -1,9 +1,9 @@
-class nagios::nrpe {
+class nagios::nrpe($nagios_server = '127.0.1.1') {
 
   package { 'nagios-nrpe-server': }
 
   service { 'nagios-nrpe-server':
-    ensure => running,
+    ensure  => running,
     require => [File["/etc/nagios/nrpe.d"],Package['nagios-nrpe-server']],
     pattern => "/usr/sbin/nrpe"
   }
@@ -11,20 +11,14 @@ class nagios::nrpe {
   file { "/etc/nagios/nrpe_local.cfg":
     content => template("nagios/nrpe_local.cfg"),
     require => Package['nagios-nrpe-server'],
-    notify => Service['nagios-nrpe-server']
+    notify  => Service['nagios-nrpe-server']
   }
 
   file { "/etc/nagios/nrpe.d/":
-    ensure => directory,
+    ensure  => directory,
     require => Package['nagios-nrpe-server']
   }
 
-  define command($definition) {
-    file { "/etc/nagios/nrpe.d/command_$name.cfg":
-      content => "command[$name]=$definition\n",
-      notify => Service['nagios-nrpe-server']
-    }
-  }
 
   file { "/etc/nagios/nrpe.d/defaults.cfg":
     source => "puppet:///modules/nagios/nrpe_defaults.cfg",
@@ -34,10 +28,4 @@ class nagios::nrpe {
   package { 'nagios-plugins': }
 
   include nagios::nrpe::tiger
-}
-
-class nagios::nrpe::tiger {
-  if $tiger_enabled {
-    tiger::ignore { 'nagios_nrpe': }
-  }
 }

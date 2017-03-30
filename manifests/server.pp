@@ -18,33 +18,28 @@ class nagios::server {
   }
 
   file { "/etc/nagios3/conf.d/defaults.cfg":
-    source => ["puppet:///files/nagios/conf.d/defaults.cfg", "puppet:///modules/nagios/conf.d/defaults.cfg"],
+    source => 'puppet:///modules/nagios/conf.d/defaults.cfg',
     require => Package[nagios],
     notify => Service[nagios]
   }
   file { "/etc/nagios3/conf.d/contacts.cfg":
-    source => ["puppet:///files/nagios/conf.d/contacts.cfg", "puppet:///modules/nagios/conf.d/contacts.cfg"],
+    source => 'puppet:///modules/nagios/conf.d/contacts.cfg',
     require => Package[nagios],
     notify => Service[nagios]
   }
 
   file { "/etc/cron.daily/nagios3":
     source => "puppet:///modules/nagios/nagios3.cron",
-    mode => 755,
+    mode => '0755',
     require => Package[nagios]
   }
 
-  define config_directory() {
-    file { "/etc/nagios3/$name":
-      recurse => true,
-      purge => true,
-      source => [ "puppet:///files/nagios/$name", "puppet:///modules/nagios/empty" ],
-      require => Package[nagios],
-      notify => Service[nagios]
-    }
-  }
 
-  config_directory { [ "conf.d", services, hosts ]: }
+  nagios::server::config_directory {
+    'conf.d':   source_path => 'puppet:///modules/nagios/conf.d';
+#    'services': source_path => 'puppet:///modules/nagios/services';
+#    'hosts':    source_path => 'puppet:///modules/nagios/hosts';
+  }
 
   file { [ "/etc/nagios3/conf.d/contacts_nagios2.cfg",
            "/etc/nagios3/conf.d/hostgroups_nagios2.cfg",
@@ -55,9 +50,9 @@ class nagios::server {
            "/etc/nagios3/conf.d/generic-service_nagios2.cfg",
            "/etc/nagios3/conf.d/extinfo_nagios2.cfg",
            "/etc/nagios3/conf.d/timeperiods_nagios2.cfg" ]:
-    ensure => absent,
+    ensure  => absent,
     require => Package[nagios],
-    notify => Service[nagios]
+    notify  => Service[nagios]
   }
 
   file { "/etc/nagios3/cgi.cfg":
@@ -65,9 +60,9 @@ class nagios::server {
     notify => Service[nagios]
   }
   file { "/etc/nagios3/nagios.cfg":
-    source => "puppet:///modules/nagios/nagios.cfg",
+    source  => "puppet:///modules/nagios/nagios.cfg",
     require => [File["/etc/nagios3/services"], File["/etc/nagios3/hosts"]],
-    notify => Service[nagios]
+    notify  => Service[nagios]
   }
 
   include nagios::plugins

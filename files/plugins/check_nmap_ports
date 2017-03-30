@@ -1,0 +1,50 @@
+#!/usr/bin/ruby
+
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: check_ports [options]"
+
+  opts.on("-o", "--open PORT1,PORT2,...", "Ports which should be open") do |v|
+    options[:expected_open_ports] = v.split(',').map(&:to_i)
+  end
+end.parse!
+
+target = ARGV.shift
+
+output = `nmap -sT -P0 -oG - #{target} 2> /dev/null`
+
+# output = <<EOF
+# # Nmap 7.40 scan initiated Sun Feb  5 23:44:42 2017 as: nmap -sT -P0 -oG - vincipark-prod.gandi.af83.io
+# Host: 95.142.171.214 () Status: Up
+# Host: 95.142.171.214 () Ports: 22/open/tcp//ssh///, 25/filtered/tcp//smtp///, 53/open/tcp//domain///, 80/open/tcp//http///, 5666/open/tcp//nrpe///      Ignored State: closed (995)
+# # Nmap done at Sun Feb  5 23:44:50 2017 -- 1 IP address (1 host up) scanned in 7.40 seconds
+# EOF
+
+ports_line = output.split("\n").find { |line| line =~ /^Host:\s.*\sPorts:.*/ }
+
+if ports_line.nil?
+  puts "PORTS UNKNOWN - can't parse ports state | #{output}"
+  exit 3
+end
+
+port_elements = ports_line.scan(%r{((\d+)/(open|close|filtered)/tcp//(\w+)///)}).map do |definition, number, status, name|
+  number = number.to_i
+  [number, { :number => number, :status => status, :name => name } ]
+end
+
+ports = Hash[port_elements]
+
+actual_open_ports = ports.values.map do |attributes|
+  attributes[:number] if attributes[:status] == 'open'
+end.compact
+
+unexpected_open_ports = actual_open_ports - options[:expected_open_ports]
+
+unless unexpected_open_ports.empty?
+  puts "PORTS CRITICAL - Unexpected open port(s): #{unexpected_open_ports.join(',')}"
+  exit 2
+end
+
+puts "PORTS OK - Open port(s): #{actual_open_ports.join(',')}"
