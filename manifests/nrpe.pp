@@ -28,4 +28,5 @@ class nagios::nrpe($nagios_server = '127.0.1.1') {
   package { 'nagios-plugins': }
 
   include nagios::nrpe::tiger
+  include nagios::nrpe::process
 }
