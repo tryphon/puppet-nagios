@@ -55,13 +55,12 @@ class nagios::server {
     notify  => Service[nagios]
   }
 
-  file { "/etc/nagios3/cgi.cfg":
-    source => "puppet:///modules/nagios/cgi.cfg",
+  file { '/etc/nagios3/cgi.cfg':
+    source => 'puppet:///modules/nagios/cgi.cfg',
     notify => Service[nagios]
   }
-  file { "/etc/nagios3/nagios.cfg":
-    source  => "puppet:///modules/nagios/nagios.cfg",
-    require => [File["/etc/nagios3/services"], File["/etc/nagios3/hosts"]],
+  file { '/etc/nagios3/nagios.cfg':
+    source  => 'puppet:///modules/nagios/nagios.cfg',
     notify  => Service[nagios]
   }
 
