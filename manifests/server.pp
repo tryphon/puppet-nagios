@@ -12,8 +12,14 @@ class nagios::server {
     require => Package[nagios]
   }
 
+  $apacheconf = $lsbdistcodename ? {
+      'wheezy'  => 'apache2.conf',
+      'jessie'  => 'apache24.conf',
+      'stretch' => 'apache24.conf',
+  }
+
   apache2::confd_file { 'nagios3':
-    source => "puppet:///modules/nagios/apache2.conf",
+    source => "puppet:///modules/nagios/${apacheconf}",
     require => Package['nagios', 'libapache2-mod-fcgid']
   }
 
