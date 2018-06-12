@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+
+from ftplib import FTP
+from datetime import datetime,timedelta
+import sys
+import configparser
+import traceback
+
+CONFFILE = '/etc/check_backup.conf'
+
+class BackupFTP:
+    def __init__(self, host, user, password, basedir):
+        self.ftp = FTP(host,user,password)
+        self.basedir = basedir
+    def runs(self, host, job):
+        filelist = self.ftp.nlst('%s/%s/%s'%(self.basedir, host, job))
+        ret = list(map(lambda x: x.split('/')[-1], filelist))
+        return ret
+    def jobs(self, host):
+        filelist = self.ftp.nlst('%s/%s'%(self.basedir, host))
+        ret = list(map(lambda x: x.split('/')[-1], filelist))
+        return ret
+    def checkHost(self, host):
+        return host in map(lambda x: x.split('/')[-1], self.ftp.nlst(self.basedir))
+
+class BackupJob:
+    def __init__(self, ftp, hostname, jobname):
+        self.hostname = hostname
+        self.name = jobname
+        self.ftp = ftp
+        self.runs=[]
+    def lastrun(self):
+        lastrun = datetime(1971, 1, 1, 0, 0, 0)
+        self.runs=ftp.runs(self.hostname, self.name)
+        for run in self.runs:
+            thisrundate = datetime(*list(map(lambda x: int(x), run.split('.'))))
+            if thisrundate > lastrun:
+                lastrun = thisrundate
+        return lastrun
+    def __str__(self):
+        print(self.name)
+
+class BackupHost:
+    def __init__(self, ftp, hostname):
+        self.hostname = hostname
+        self.ftp = ftp
+        self.jobs = []
+        self._populateJobs()
+    def _populateJobs(self):
+        for jobname in self.ftp.jobs(self.hostname):
+            self.jobs.append(BackupJob(self.ftp, self.hostname, jobname))
+
+class NagiosCheck:
+    def __init__(self,host,service):
+        self.host = host
+        self.service = service
+        self.status = 3
+        self.subs = []
+    def __enter__(self):
+        return self
+    def ok(self,text):
+        if self.status in [3]:
+            self.status = 0
+        self.subs.append("OK: %s"%(text,))
+    def warning(self,text):
+        if self.status in [0,3]:
+            self.status = 1
+        self.subs.append("W: %s"%(text,))
+    def critical(self,text):
+        if self.status in [0,1,3]:
+            self.status = 2
+        self.subs.append("C: %s"%(text,))
+    def output(self):
+        print("%s: %s"%(
+            ['OK','WARNING','CRITICAL','UNKNOWN'][self.status],
+            ' - '.join(self.subs)))
+        sys.exit(self.status)
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.output()
+        return exc_type == None
+
+
+hostname = sys.argv[1]
+
+config = configparser.ConfigParser()
+config.read(CONFFILE)
+ftpconf = config['FTP']
+probeconf = config['PROBE']
+warn = datetime.now()-timedelta(0,0,0,0,0,probeconf.getint('warning'))
+crit = datetime.now()-timedelta(0,0,0,0,0,probeconf.getint('critical'))
+
+
+with NagiosCheck(hostname,"backup") as ngc:
+    ftp = BackupFTP(ftpconf['host'], ftpconf['user'], ftpconf['password'], "infra-backup")
+    if not ftp.checkHost(hostname):
+        ngc.critical("No backup for %s"%(hostname,))
+    buHost = BackupHost(ftp,hostname)
+
+    if len(buHost.jobs) == 0:
+        ngc.critical("No backup job for %s"%(hostname,))
+
+    for job in buHost.jobs:
+        lastrun = job.lastrun()
+        if lastrun < crit:
+            ngc.critical("Backup too old for job %s (%s)"%(job.name,lastrun))
+        elif lastrun < warn:
+            ngc.warning("Backup late for job %s (%s)"%(job.name,lastrun))
+        else:
+            ngc.ok("Last backp job %s in time (%s)"%(
+                job.name,
+                lastrun))
