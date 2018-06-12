@@ -10,7 +10,7 @@ define nagios::plugin(
       mode    => '0755',
       require => File['/usr/local/lib/nagios/plugins'],
     }
-  } else {
+  } else {
     file { "/usr/local/lib/nagios/plugins/$name":
       content => $content,
       mode    => '0755',
