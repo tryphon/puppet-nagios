@@ -1,0 +1,39 @@
+#!/bin/bash
+
+HOST=$1
+
+CONFDIR=/etc/check_puppet
+
+if [ -r $CONFDIR/conf ] ; then
+  . $CONFDIR/conf
+else
+  echo "Unable to load configuration"
+  exit 3
+fi
+
+if [ ! -r $CERT ]||[ ! -r $CA ]||[ ! -r $KEY ]; then
+  echo "Unable to load SSL data"
+  exit 3
+fi
+
+QS="query=[\"=\", \"certname\", \"$HOST\"],[\"limit\",1]"
+
+RESPONSE=$(curl --cacert $CA --cert $CERT --key $KEY -G $URL --data-urlencode "$QS" -s)
+
+LRDATE=$(echo $RESPONSE|jq '.[0].report_timestamp'|sed 's/"//g')
+LRTS=$(date -d $LRDATE +%s)
+STATUS=$(echo $RESPONSE|jq '.[0].latest_report_status')
+
+if [[ $LRTS -lt $TSC ]]; then
+  echo "CRITICAL : Last report too old ($LRDATE)"
+  exit 2
+elif [[ $LRTS -lt $TSW ]]; then
+  echo "Warning : Last report too old ($LRDATE)"
+  exit 1
+elif [ $STATUS = "failed" ]; then
+  echo "CRITICAL : Configuration failed"
+  exit 2
+else
+  echo "OK : Last status ($LRDATE) : $STATUS"
+  exit 0
+fi
