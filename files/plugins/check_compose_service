@@ -1,0 +1,50 @@
+#!/usr/bin/bash
+
+while getopts "c:p:s:" option; do
+    case "${option}" in 
+    c)
+        CADVISOR=${OPTARG}
+        ;;
+    p)
+        PROJECT=${OPTARG}
+        ;;
+    s)
+        SERVICES+=(${OPTARG})
+        ;;
+    *)
+        echo "Bad option set"
+        exit 3
+        ;;
+    esac
+done
+
+COUTPUT=$(curl -s http://${CADVISOR}/api/v1.3/docker|jq -r '[. as $cont|keys[]|$cont[.].labels|[."com.docker.compose.project",."com.docker.compose.service"]]|.[]|select(.[0]=="'${PROJECT}'")|.[1]')
+RES=""
+RET=0
+
+for exp in ${SERVICES[@]}; do
+    FOUND=0
+    for srv in ${COUTPUT[@]}; do
+        if [ "$exp" = "$srv" ]; then
+            FOUND=1
+            break
+        fi
+    done
+    if [ $FOUND -eq 1 ]; then
+        RES="$RES, $exp:OK"
+        RET=$(($RET + 0))
+    else
+        RES="$RES, $exp:NOT OK"
+        RET=$(($RET + 1))
+    fi
+done
+if [ $RET -eq 0 ]; then
+    PREFIX="OK"
+else
+    PREFIX="CRITICAL"
+fi
+echo ${PREFIX}${RES}
+if [ $RET -eq 0 ]; then
+    exit 0
+fi
+exit 3
