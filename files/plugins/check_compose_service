@@ -47,4 +47,4 @@ echo ${PREFIX}${RES}
 if [ $RET -eq 0 ]; then
     exit 0
 fi
-exit 3
+exit 2
