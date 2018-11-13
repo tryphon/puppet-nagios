@@ -26,7 +26,7 @@ class Status:
             self.status = Status.CRITICAL
         self.messages.append(message)
     def get_status(self):
-        print(" | ".join(self.messages))
+        print(", ".join(self.messages))
         return(self.status)
 
 def main():
