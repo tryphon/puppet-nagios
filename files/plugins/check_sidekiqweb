@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+
+import yaml
+import requests
+import sys
+import argparse
+
+# {"sidekiq":{"processed":26074,"failed":51,"busy":0,"processes":1,"enqueued":0,"scheduled":0,"retries":0,"dead":0,"default_latency":0},"redis":{"redis_version":"4.0.10","uptime_in_days":"4","connected_clients":"8","used_memory_human":"1.01M","used_memory_peak_human":"1.12M"}}
+
+class Status:
+    UNKNOWN = 3
+    OK = 0
+    WARNING = 1
+    CRITICAL = 2
+    def __init__(self):
+        self.messages = []
+        self.status = Status.UNKNOWN
+    def set_status(self, status, message):
+        if status == Status.UNKNOWN:
+            self.status = Status.UNKNOWN
+        elif status == Status.OK and self.status == Status.UNKNOWN:
+            self.status = Status.OK
+        elif status == Status.WARNING and self.status in [Status.UNKNOWN,Status.OK]:
+            self.status = Status.WARNING
+        elif status == Status.CRITICAL:
+            self.status = Status.CRITICAL
+        self.messages.append(message)
+    def get_status(self):
+        print(" | ".join(self.messages))
+        return(self.status)
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-u', '--url', dest='url')
+    parser.add_argument('-v', dest='verbose', action='store_true')
+    parser.add_argument('-e', dest='warn_enqueued', action='store_const', const=int, default=5)
+    parser.add_argument('-E', dest='crit_enqueued', action='store_const', const=int, default=10)
+    parser.add_argument('-l', dest='warn_latency', action='store_const', const=int, default=5)
+    parser.add_argument('-L', dest='crit_latency', action='store_const', const=int, default=30)
+    parser.add_argument('-b', dest='warn_busy', action='store_const', const=int, default=3)
+    parser.add_argument('-B', dest='crit_busy', action='store_const', const=int, default=5)
+    parser.add_argument('-p', dest='warn_min_process', action='store_const', const=int, default=0)
+    parser.add_argument('-P', dest='crit_min_process', action='store_const', const=int, default=0)
+    args = parser.parse_args()
+
+    status = Status()
+
+    r = requests.get(args.url)
+    response = r.json()
+
+    if response['sidekiq']['enqueued'] > args.crit_enqueued:
+        status.set_status(Status.CRITICAL,"{0} jobs enqueued > {1}".format(response['sidekiq']['enqueued'],args.crit_enqueued))
+    elif response['sidekiq']['enqueued'] > args.warn_enqueued:
+        status.set_status(Status.WARNING,"{0} jobs enqueued > {1}".format(response['sidekiq']['enqueued'],args.warn_enqueued))
+    else:
+        status.set_status(Status.OK,"{0} jobs enqueued < {1}".format(response['sidekiq']['enqueued'],args.warn_enqueued))
+
+    if response['sidekiq']['default_latency'] > args.crit_latency:
+        status.set_status(Status.CRITICAL,"{0} jobs latency > {1}".format(response['sidekiq']['default_latency'],args.crit_latency))
+    elif response['sidekiq']['default_latency'] > args.warn_latency:
+        status.set_status(Status.WARNING,"{0} jobs latency > {1}".format(response['sidekiq']['default_latency'],args.warn_latency))
+    else:
+        status.set_status(Status.OK,"{0} jobs latency < {1}".format(response['sidekiq']['default_latency'],args.warn_latency))
+
+    if response['sidekiq']['busy'] > args.crit_busy:
+        status.set_status(Status.CRITICAL,"{0} jobs busy > {1}".format(response['sidekiq']['busy'],args.crit_busy))
+    elif response['sidekiq']['busy'] > args.warn_busy:
+        status.set_status(Status.WARNING,"{0} jobs busy > {1}".format(response['sidekiq']['busy'],args.warn_busy))
+    else:
+        status.set_status(Status.OK,"{0} jobs busy < {1}".format(response['sidekiq']['busy'],args.warn_busy))
+
+    if response['sidekiq']['processes'] < args.crit_min_process:
+        status.set_status(Status.CRITICAL,"{0} jobs min_process < {1}".format(response['sidekiq']['processes'],args.crit_min_process))
+    elif response['sidekiq']['processes'] < args.warn_min_process:
+        status.set_status(Status.WARNING,"{0} jobs min_process < {1}".format(response['sidekiq']['processes'],args.warn_min_process))
+    else:
+        status.set_status(Status.OK,"{0} jobs min_process > {1}".format(response['sidekiq']['processes'],args.warn_min_process))
+
+    return(status.get_status())
+
+if __name__ == "__main__":
+    sys.exit(main())
