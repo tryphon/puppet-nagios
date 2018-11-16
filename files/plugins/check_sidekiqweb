@@ -45,7 +45,14 @@ def main():
 
     status = Status()
 
-    r = requests.get(args.url)
+    requests.packages.urllib3.disable_warnings()
+    try:
+        r = requests.get(args.url, verify=False, timeout=1.0)
+        r.raise_for_status()
+    except requests.exceptions.RequestException:
+        status.set_status(Status.UNKNOWN,"Cannot connect to SidekiqWeb at {0}".format(args.url))
+        return(status.get_status())
+
     response = r.json()
 
     if response['sidekiq']['enqueued'] > args.crit_enqueued:
