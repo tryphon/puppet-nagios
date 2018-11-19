@@ -76,9 +76,9 @@ def main():
     else:
         status.set_status(Status.OK,"{0} jobs busy < {1}".format(response['sidekiq']['busy'],args.warn_busy))
 
-    if response['sidekiq']['processes'] < args.crit_min_process:
+    if response['sidekiq']['processes'] <= args.crit_min_process:
         status.set_status(Status.CRITICAL,"{0} jobs min_process < {1}".format(response['sidekiq']['processes'],args.crit_min_process))
-    elif response['sidekiq']['processes'] < args.warn_min_process:
+    elif response['sidekiq']['processes'] <= args.warn_min_process:
         status.set_status(Status.WARNING,"{0} jobs min_process < {1}".format(response['sidekiq']['processes'],args.warn_min_process))
     else:
         status.set_status(Status.OK,"{0} jobs min_process > {1}".format(response['sidekiq']['processes'],args.warn_min_process))
