@@ -18,19 +18,12 @@ while getopts "c:p:s:" option; do
     esac
 done
 
-COUTPUT=$(curl -s http://${CADVISOR}/api/v1.3/docker|jq -r '[. as $cont|keys[]|$cont[.].labels|[."com.docker.compose.project",."com.docker.compose.service"]]|.[]|select(.[0]=="'${PROJECT}'")|.[1]')
 RES=""
 RET=0
 
 for exp in ${SERVICES[@]}; do
     FOUND=0
-    for srv in ${COUTPUT[@]}; do
-        if [ "$exp" = "$srv" ]; then
-            FOUND=1
-            break
-        fi
-    done
-    if [ $FOUND -eq 1 ]; then
+    if [ $(curl -s -o /dev/null -w "%{http_code}" http://${CADVISOR}/api/v1.3/docker/${PROJECT}_${exp}) == "200" ]; then 
         RES="$RES, $exp:OK"
         RET=$(($RET + 0))
     else
