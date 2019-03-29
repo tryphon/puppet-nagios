@@ -1,43 +1,60 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-while getopts "c:p:s:" option; do
-    case "${option}" in 
-    c)
-        CADVISOR=${OPTARG}
-        ;;
-    p)
-        PROJECT=${OPTARG}
-        ;;
-    s)
-        SERVICES+=(${OPTARG})
-        ;;
-    *)
-        echo "Bad option set"
-        exit 3
-        ;;
-    esac
-done
+import docker
+import sys
+import configparser
 
-RES=""
-RET=0
+class NagiosCheck:
+    def __init__(self,host,service):
+        self.host = host
+        self.service = service
+        self.status = 3
+        self.subs = []
+        self.details = []
+    def __enter__(self):
+        return self
+    def ok(self,text):
+        if self.status in [3]:
+            self.status = 0
+        self.subs.append("OK: %s"%(text,))
+    def warning(self,text):
+        if self.status in [0,3]:
+            self.status = 1
+        self.subs.append("W: %s"%(text,))
+    def critical(self,text):
+        if self.status in [0,1,3]:
+            self.status = 2
+        self.subs.append("C: %s"%(text,))
+    def detail(self,text):
+        self.details.append(text)
+    def output(self):
+        print("%s: %s"%(
+            ['OK','WARNING','CRITICAL','UNKNOWN'][self.status],
+            ' - '.join(self.subs)))
+        for text in self.details:
+            print(text)
+        sys.exit(self.status)
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.output()
+        return exc_type == None
 
-for exp in ${SERVICES[@]}; do
-    FOUND=0
-    if [ $(curl -s -o /dev/null -w "%{http_code}" http://${CADVISOR}/api/v1.3/docker/${PROJECT}_${exp}) == "200" ]; then 
-        RES="$RES, $exp:OK"
-        RET=$(($RET + 0))
-    else
-        RES="$RES, $exp:NOT OK"
-        RET=$(($RET + 1))
-    fi
-done
-if [ $RET -eq 0 ]; then
-    PREFIX="OK"
-else
-    PREFIX="CRITICAL"
-fi
-echo ${PREFIX}${RES}
-if [ $RET -eq 0 ]; then
-    exit 0
-fi
-exit 2
+
+compose_service = sys.argv[1]
+
+config = configparser.ConfigParser()
+config.read('/etc/check_compose_service.d/{}.conf'.format(compose_service))
+
+
+with NagiosCheck(compose_service,"Compose service") as ngc:
+    client = docker.from_env()
+    for section in config.sections():
+        container_list = client.containers.list(filters={"label":"com.docker.compose.project={}".format(section)})
+        for service in config[section]:
+            expected = int(config[section][service])
+            count = len(filter(lambda c: c.labels['com.docker.compose.service']==service, container_list))
+            substatus = count == expected
+            if substatus:
+                ngc.ok(service)
+            else:
+                ngc.critical(service)
+            ngc.detail("{}/{} : {}/{} ({})".format(section,service,count,expected, 'OK' if substatus else 'CRITICAL'))
